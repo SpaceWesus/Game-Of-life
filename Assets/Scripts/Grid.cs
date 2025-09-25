@@ -1,0 +1,102 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
+// IPointerClickHandler to receive OnPointerClick callbacks, requires eventsystems!
+// (whenever we click on the object with script, it will call the OnPointerClick()
+public class Grid : MonoBehaviour, IPointerClickHandler
+{
+    
+    public int gridWidth = 100;
+    public int gridHeight = 100;
+
+    
+    
+    public RawImage displayImage;
+
+    private Texture2D gridTexture;
+    private Color[,] gridData;
+
+    void Start()
+    {
+        InitializeGrid();
+    }
+
+    void InitializeGrid()
+    {
+        // Initialize the data array
+        gridData = new Color[gridWidth, gridHeight];
+
+        // Create the texture that will display grid
+        gridTexture = new Texture2D(gridWidth, gridHeight);
+
+        // filter mode point to not have blurring
+        gridTexture.filterMode = FilterMode.Point;
+
+        // Fill the data and texture with off/dead cell color
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Color initialColor = Color.black;
+                gridData[x, y] = initialColor;
+                gridTexture.SetPixel(x, y, initialColor);
+            }
+        }
+
+        // Apply all SetPixel ^above^ changes to the texture, without apply the changes arent visible.
+        gridTexture.Apply();
+
+        // Assign the generated texture to our UI
+        displayImage.texture = gridTexture;
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        RectTransform imageRect = displayImage.rectTransform;
+
+        //eventdata position would give us pixel based position and it would consider the whole screen, not just canvas
+        // Convert the screen-space click position to a local position within the RawImage
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, eventData.position, eventData.pressEventCamera, out Vector2 localPoint))
+        {
+            // The localPoint's origin is at the center of the image by default
+            // so we need to adjust it so (0,0) is at the bottom left corner
+
+            float pivotX = imageRect.pivot.x * imageRect.rect.width; //the pivot would be half (center of img) * width,
+                                                                     //would give us how far the center is from the edge
+
+            float pivotY = imageRect.pivot.y * imageRect.rect.height;
+
+            localPoint.x += pivotX; //converts the click coords by offset of the center.
+                                    //(if center is 50 away from edge, this does -50 + 50) so the edge now has x = 0
+
+            localPoint.y += pivotY;
+
+            // Normalize the coordinates to a 0-1 range (Math!) (so the rawimage size doesnt affect the grid ccords)
+
+            float normalizedX = Mathf.Clamp01(localPoint.x / imageRect.rect.width); //local point should now be (0,0) at bottom left / actual width // clamp01 for safety
+            float normalizedY = Mathf.Clamp01(localPoint.y / imageRect.rect.height);
+
+            // Scale the normalized coordinates to grid coordinates
+            int gridX = Mathf.FloorToInt(normalizedX * gridWidth); //if normalizedX is .687 and width 100, we get x cord to be 68 (int)
+            int gridY = Mathf.FloorToInt(normalizedY * gridHeight);
+
+            Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
+
+            //update the color at that position
+            ChangeCellColor(gridX, gridY, Color.white);
+        }
+    }
+
+    public void ChangeCellColor(int x, int y, Color newColor)
+    {
+        // Update the grid array
+        gridData[x, y] = newColor;
+
+        // Update tthe texture
+        gridTexture.SetPixel(x, y, newColor);
+
+        // Apply the change.
+        gridTexture.Apply();
+    }
+}
