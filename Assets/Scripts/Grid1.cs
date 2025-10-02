@@ -24,6 +24,8 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
     private Texture2D gridTexture;
     private Color32[] pixels;
 
+    private byte selectedColorID = 1;
+
     // Simulation timing
     private float accum;
     private bool isPaused = true;
@@ -37,6 +39,18 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Alpha1)) // 1 key
+        {
+            selectedColorID = 1; // Select Green
+            Debug.Log("Selected Green");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2)) // 2 key
+        {
+            selectedColorID = 2; // Select Red
+            Debug.Log("Selected Red");
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             isPaused = !isPaused;
@@ -89,8 +103,17 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                // This way, we calculate it once for every cell.
-                int aliveNeighbors = 0;
+                byte currentState = currentGrid[x, y];
+
+                if (currentState == 2) // Rule for Red
+                {
+                    nextGrid[x, y] = 2;
+                    continue;
+                }
+
+                int aliveNeighbors = 0;   // A count of all live neighbors of any color
+                int greenNeighbors = 0;
+
                 for (int dy = -1; dy <= 1; dy++)
                 {
                     for (int dx = -1; dx <= 1; dx++)
@@ -99,6 +122,7 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
                         {
                             continue;
                         }
+
                         int nx = x + dx;
                         int ny = y + dy;
 
@@ -112,34 +136,35 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
                             continue;
                         }
 
-                        if (currentGrid[nx, ny] != 0)
+                        byte neighborState = currentGrid[nx, ny];
+
+                        if (neighborState != 0)
                         {
                             aliveNeighbors++;
                         }
+
+                        if (neighborState == 1)
+                        {
+                            greenNeighbors++;
+                        }
                     }
                 }
-                
 
-                byte currentState = currentGrid[x, y];
                 byte nextState = currentState;
 
                 //APPLY RULES
-                if (currentState == 1) // Rule for live cells
+                if (currentState == 1) // Rule for live Green cells
                 {
-                    // Underpopulation or Overpopulation
-                    if (aliveNeighbors < 2 || aliveNeighbors > 3)
+                    if (greenNeighbors < 2 || greenNeighbors > 3)
                     {
                         nextState = 0; // Dies
                     }
-                    // (Implicitly survives if neighbors are 2 or 3)
                 }
                 else if (currentState == 0) // Rule for dead cells
                 {
-                    
-                    // A dead cell with exactly 3 live neighbors becomes alive
-                    if (aliveNeighbors == 3)
+                    if (greenNeighbors == 3)
                     {
-                        nextState = 1; // Becomes a green cell
+                        nextState = 1; // Becomes green
                     }
                 }
 
@@ -201,9 +226,9 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
 
             Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
 
-            // For now, clicking will place a Green cell (ID 1)
+            
             byte currentCellState = currentGrid[gridX, gridY];
-            byte newCellState = (currentCellState == 0) ? (byte)1 : (byte)0; // Toggle between Off and Green
+            byte newCellState = (currentCellState == 0) ? selectedColorID : (byte)0; // Toggle between colors
 
             currentGrid[gridX, gridY] = newCellState;
 
