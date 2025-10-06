@@ -10,8 +10,27 @@ public class Grid : MonoBehaviour, IPointerClickHandler
     public int gridWidth = 100;
     public int gridHeight = 100;
 
-    
-    
+    #region Donovan Rule Checking
+
+    public enum Neighbors 
+    { 
+        All,
+        Adjacent,
+        Corner
+    }
+
+    public enum Operation
+    {
+        Equal,
+        NotEqual,
+        LessThan,
+        GreaterThan,
+        LessThanEqual,
+        GreaterThanEqual
+    }
+
+    #endregion
+
     public RawImage displayImage;
 
     private Texture2D gridTexture;
@@ -99,4 +118,90 @@ public class Grid : MonoBehaviour, IPointerClickHandler
         // Apply the change.
         gridTexture.Apply();
     }
+
+    #region Donovan Rule Checking
+
+    // Compares the total number of tiles of a certain list of colors to a target amount, using a designated operation.
+    public bool CheckCount(Vector2Int currentPos, Color[] targetColors, int targetCount, Neighbors targetNeighbors, Operation op)
+    {
+        int total = 0;
+
+        // Check adjacent neighbors.
+        if (targetNeighbors == Neighbors.All || targetNeighbors == Neighbors.Adjacent)
+        {
+            Vector2Int xPlus = new Vector2Int(currentPos.x + 1, currentPos.y);
+            Vector2Int xMinus = new Vector2Int(currentPos.x - 1, currentPos.y);
+            Vector2Int yPlus = new Vector2Int(currentPos.x, currentPos.y + 1);
+            Vector2Int yMinus = new Vector2Int(currentPos.x, currentPos.y - 1);
+
+            if (CheckPosition(targetColors, xPlus)) total++;
+            if (CheckPosition(targetColors, xMinus)) total++;
+            if (CheckPosition(targetColors, yPlus)) total++;
+            if (CheckPosition(targetColors, yMinus)) total++;
+        }
+
+        // Check corner neighbors.
+        if (targetNeighbors == Neighbors.All || targetNeighbors == Neighbors.Corner)
+        {
+            Vector2Int xPyP = new Vector2Int(currentPos.x + 1, currentPos.y + 1);
+            Vector2Int xMyP = new Vector2Int(currentPos.x - 1, currentPos.y + 1);
+            Vector2Int xPyM = new Vector2Int(currentPos.x + 1, currentPos.y - 1);
+            Vector2Int xMyM = new Vector2Int(currentPos.x - 1, currentPos.y - 1);
+
+            if (CheckPosition(targetColors, xPyP)) total++;
+            if (CheckPosition(targetColors, xMyP)) total++;
+            if (CheckPosition(targetColors, xPyM)) total++;
+            if (CheckPosition(targetColors, xMyM)) total++;
+        }
+
+        // Compare the total number of target colors found to the target count using the designated operation.
+        switch (op)
+        {
+            case Operation.Equal:
+                if (total == targetCount) return true;
+                else return false;
+            case Operation.NotEqual:
+                if (total != targetCount) return true;
+                else return false;
+            case Operation.GreaterThan:
+                if (total > targetCount) return true;
+                else return false;
+            case Operation.LessThan:
+                if (total < targetCount) return true;
+                else return false;
+            case Operation.GreaterThanEqual:
+                if (total >= targetCount) return true;
+                else return false;
+            case Operation.LessThanEqual:
+                if (total <= targetCount) return true;
+                else return false;
+            default:
+                return false;
+        }
+    }
+
+    // Checks if the color at a certain position is within the targetColors list.
+    public bool CheckPosition(Color[] targetColors, Vector2Int targetPos)
+    {
+        if (ColorInList(targetColors, GetColorAtPos(targetPos))) return true;
+        else return false;
+    }
+
+    // Checks if a color is within a list of colors.
+    public bool ColorInList(Color[] colorList, Color targetColor)
+    {
+        foreach (Color color in colorList)
+            if (color == targetColor) return true;
+
+        return false;
+    }
+
+    // Gets the color at a given position of the previous frame.
+    // TODO: Add color getting.
+    public Color GetColorAtPos(Vector2Int pos)
+    {
+        return new Color(0, 0, 0, 0);
+    }
+
+    #endregion
 }

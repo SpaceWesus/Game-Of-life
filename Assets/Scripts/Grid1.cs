@@ -6,7 +6,6 @@ using UnityEngine.EventSystems;
 // (whenever we click on the object with script, it will call the OnPointerClick()
 public class Grid1 : MonoBehaviour, IPointerClickHandler
 {
-    
     public int gridWidth = 100;
     public int gridHeight = 100;
 
@@ -30,7 +29,28 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
     private float accum;
     private bool isPaused = true;
 
+    #region Donovan Rule Checking
 
+    public enum Neighbors
+    {
+        All,
+        Adjacent,
+        Corner
+    }
+
+    public enum Operation
+    {
+        Equal,
+        NotEqual,
+        LessThan,
+        GreaterThan,
+        LessThanEqual,
+        GreaterThanEqual
+    }
+
+    [SerializeField] private ColorScript[] colors;
+
+    #endregion
 
     void Start()
     {
@@ -41,13 +61,13 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
     {
         if (Input.GetKeyDown(KeyCode.Alpha1)) // 1 key
         {
-            selectedColorID = 1; // Select Green
+            selectedColorID = 0; // Select Green
             Debug.Log("Selected Green");
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha2)) // 2 key
         {
-            selectedColorID = 2; // Select Red
+            selectedColorID = 1; // Select Red
             Debug.Log("Selected Red");
         }
 
@@ -97,6 +117,19 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
         displayImage.texture = gridTexture;
     }
 
+    void Step()
+    {
+        for (int y = 0; y < gridHeight; y++)
+            for (int x = 0; x < gridWidth; x++)
+                nextGrid[x, y] = CheckRules(currentGrid[x, y], new Vector2Int(x, y));
+
+        // Swap the buffers for the next frame
+        var temp = currentGrid;
+        currentGrid = nextGrid;
+        nextGrid = temp;
+    }
+
+    /*
     void Step()
     {
         for (int y = 0; y < gridHeight; y++)
@@ -177,6 +210,7 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
         currentGrid = nextGrid;
         nextGrid = temp;
     }
+    */
 
     void UploadFrame()
     {
@@ -186,7 +220,8 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
             for (int x = 0; x < gridWidth; x++)
             {
                 byte cellID = currentGrid[x, y];
-                pixels[i] = colorPalette[cellID];
+                //pixels[i] = colorPalette[cellID];
+                pixels[i] = colors[cellID].GetColor();
                 i++;
             }
         }
@@ -233,8 +268,110 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
             currentGrid[gridX, gridY] = newCellState;
 
             // Update the single pixel on the texture for immediate visual feedback
-            gridTexture.SetPixel(gridX, gridY, colorPalette[newCellState]);
+            //gridTexture.SetPixel(gridX, gridY, colorPalette[newCellState]);
+            gridTexture.SetPixel(gridX, gridY, colors[newCellState].GetColor());
             gridTexture.Apply();
         }
     }
+
+    #region Donovan Rule Checking
+
+    // Checks the rules for the given color and returns the ID corresponding to the resulting color.
+    private byte CheckRules(byte id, Vector2Int pos)
+    {
+        byte resultByte = 0;
+        Color resultColor = colors[id].CheckRules(pos);
+        for (byte i = 0; i < colors.Length; i++)
+            if (resultColor == colors[i].GetColor()) resultByte = i;
+        return resultByte;
+    }
+
+    // Compares the total number of tiles of a certain list of colors to a target amount, using a designated operation.
+    public bool CheckCount(Vector2Int currentPos, Color[] targetColors, int targetCount, Neighbors targetNeighbors, Operation op)
+    {
+        int total = 0;
+
+        // Check adjacent neighbors.
+        if (targetNeighbors == Neighbors.All || targetNeighbors == Neighbors.Adjacent)
+        {
+            Vector2Int xPlus = new Vector2Int(currentPos.x + 1, currentPos.y);
+            Vector2Int xMinus = new Vector2Int(currentPos.x - 1, currentPos.y);
+            Vector2Int yPlus = new Vector2Int(currentPos.x, currentPos.y + 1);
+            Vector2Int yMinus = new Vector2Int(currentPos.x, currentPos.y - 1);
+
+            if (CheckPosition(targetColors, xPlus)) total++;
+            if (CheckPosition(targetColors, xMinus)) total++;
+            if (CheckPosition(targetColors, yPlus)) total++;
+            if (CheckPosition(targetColors, yMinus)) total++;
+        }
+
+        // Check corner neighbors.
+        if (targetNeighbors == Neighbors.All || targetNeighbors == Neighbors.Corner)
+        {
+            Vector2Int xPyP = new Vector2Int(currentPos.x + 1, currentPos.y + 1);
+            Vector2Int xMyP = new Vector2Int(currentPos.x - 1, currentPos.y + 1);
+            Vector2Int xPyM = new Vector2Int(currentPos.x + 1, currentPos.y - 1);
+            Vector2Int xMyM = new Vector2Int(currentPos.x - 1, currentPos.y - 1);
+
+            if (CheckPosition(targetColors, xPyP)) total++;
+            if (CheckPosition(targetColors, xMyP)) total++;
+            if (CheckPosition(targetColors, xPyM)) total++;
+            if (CheckPosition(targetColors, xMyM)) total++;
+        }
+
+        // Compare the total number of target colors found to the target count using the designated operation.
+        switch (op)
+        {
+            case Operation.Equal:
+                if (total == targetCount) return true;
+                else return false;
+            case Operation.NotEqual:
+                if (total != targetCount) return true;
+                else return false;
+            case Operation.GreaterThan:
+                if (total > targetCount) return true;
+                else return false;
+            case Operation.LessThan:
+                if (total < targetCount) return true;
+                else return false;
+            case Operation.GreaterThanEqual:
+                if (total >= targetCount) return true;
+                else return false;
+            case Operation.LessThanEqual:
+                if (total <= targetCount) return true;
+                else return false;
+            default:
+                return false;
+        }
+    }
+
+    // Checks if the color at a certain position is within the targetColors list.
+    public bool CheckPosition(Color[] targetColors, Vector2Int targetPos)
+    {
+        if (ColorInList(targetColors, GetColorAtPos(targetPos))) return true;
+        else return false;
+    }
+
+    // Checks if a color is within a list of colors.
+    public bool ColorInList(Color[] colorList, Color targetColor)
+    {
+        foreach (Color color in colorList)
+            if (color == targetColor) return true;
+
+        return false;
+    }
+
+    // Gets the color at a given position of the previous frame.
+    public Color GetColorAtPos(Vector2Int pos)
+    {
+        if (pos.x >= gridWidth) pos.x = 0;
+        if (pos.x < 0) pos.x = gridWidth - 1;
+        if (pos.y >= gridHeight) pos.y = 0;
+        if (pos.y < 0) pos.y = gridHeight - 1;
+
+        byte id = currentGrid[pos.x,pos.y];
+        return colors[id].GetColor();
+    }
+
+    #endregion
 }
