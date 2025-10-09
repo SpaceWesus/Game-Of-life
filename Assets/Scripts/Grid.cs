@@ -13,6 +13,7 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
     public RawImage displayImage;
     public bool wrapEdges = true;
+    public bool randomInit = false;
 
     public float stepsPerSecond = 10f;
 
@@ -75,6 +76,18 @@ public class Grid : MonoBehaviour, IPointerClickHandler
             Debug.Log("Selected Blue");
         }
 
+        if (Input.GetKeyDown(KeyCode.Alpha3)) // 3 key
+        {
+            selectedColorID = 2; // Select Blue
+            Debug.Log("Selected Blue");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha4)) // 4 key
+        {
+            selectedColorID = 3; // Select Green
+            Debug.Log("Selected Green");
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             isPaused = !isPaused;
@@ -96,6 +109,9 @@ public class Grid : MonoBehaviour, IPointerClickHandler
     // Initializes the grid to all of whatever the first color in the Colors list is.
     void InitializeGrid()
     {
+        // Initialize the colors array.
+        colors = transform.GetComponentsInChildren<ColorScript>();
+
         // Initialize the new byte arrays and the pixel buffer
         currentGrid = new byte[gridWidth, gridHeight];
         nextGrid = new byte[gridWidth, gridHeight];
@@ -110,7 +126,8 @@ public class Grid : MonoBehaviour, IPointerClickHandler
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                currentGrid[x, y] = 0; // 0 = Off/Dead
+                if (randomInit) currentGrid[x, y] = (byte) Random.Range(0, colors.Length);
+                else currentGrid[x, y] = 0; // Default Color
             }
         }
 
