@@ -6,7 +6,7 @@ public class ColorScript : MonoBehaviour
 
     public virtual Color CheckRules(Vector2Int pos)
     {
-        Grid1 grid = transform.parent.GetComponent<Grid1>();
+        Grid grid = transform.parent.GetComponent<Grid>();
 
         return color;
     }

@@ -6,14 +6,33 @@ using UnityEngine.EventSystems;
 // (whenever we click on the object with script, it will call the OnPointerClick()
 public class Grid : MonoBehaviour, IPointerClickHandler
 {
-    
     public int gridWidth = 100;
     public int gridHeight = 100;
 
-    #region Donovan Rule Checking
+    public ColorScript[] colors;
 
-    public enum Neighbors 
-    { 
+    public RawImage displayImage;
+    public bool wrapEdges = true;
+
+    public float stepsPerSecond = 10f;
+
+    private byte[,] currentGrid;
+    private byte[,] nextGrid;
+
+    // Rendering data
+    private Texture2D gridTexture;
+    private Color32[] pixels;
+
+    private byte selectedColorID = 1;
+
+    // Simulation timing
+    private float accum;
+    private bool isPaused = true;
+
+    #region Donovan Rule Checking Enums
+
+    public enum Neighbors
+    {
         All,
         Adjacent,
         Corner
@@ -31,45 +50,108 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
     #endregion
 
-    public RawImage displayImage;
-
-    private Texture2D gridTexture;
-    private Color[,] gridData;
-
     void Start()
     {
         InitializeGrid();
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1)) // 1 key
+        {
+            selectedColorID = 0; // Select Black
+            Debug.Log("Selected Black");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2)) // 2 key
+        {
+            selectedColorID = 1; // Select White
+            Debug.Log("Selected White");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3)) // 3 key
+        {
+            selectedColorID = 2; // Select Blue
+            Debug.Log("Selected Blue");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            isPaused = !isPaused;
+        }
+
+        if (!isPaused)
+        {
+            accum += Time.deltaTime;
+            float stepInterval = 1f / stepsPerSecond;
+            while (accum >= stepInterval)
+            {
+                Step();
+                UploadFrame();
+                accum -= stepInterval;
+            }
+        }
+    }
+
+    // Initializes the grid to all of whatever the first color in the Colors list is.
     void InitializeGrid()
     {
-        // Initialize the data array
-        gridData = new Color[gridWidth, gridHeight];
+        // Initialize the new byte arrays and the pixel buffer
+        currentGrid = new byte[gridWidth, gridHeight];
+        nextGrid = new byte[gridWidth, gridHeight];
+        pixels = new Color32[gridWidth * gridHeight];
 
-        // Create the texture that will display grid
+        // Create the texture that will display the grid
         gridTexture = new Texture2D(gridWidth, gridHeight);
-
-        // filter mode point to not have blurring
         gridTexture.filterMode = FilterMode.Point;
 
-        // Fill the data and texture with off/dead cell color
+        // Set the initial state to Off/Dead (ID 0)
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                Color initialColor = Color.black;
-                gridData[x, y] = initialColor;
-                gridTexture.SetPixel(x, y, initialColor);
+                currentGrid[x, y] = 0; // 0 = Off/Dead
             }
         }
 
-        // Apply all SetPixel ^above^ changes to the texture, without apply the changes arent visible.
-        gridTexture.Apply();
+        // Initial draw of the grid
+        UploadFrame();
 
         // Assign the generated texture to our UI
         displayImage.texture = gridTexture;
     }
 
+    // Loops through every cell in the grid and updates it based on its color's rules.
+    void Step()
+    {
+        for (int y = 0; y < gridHeight; y++)
+            for (int x = 0; x < gridWidth; x++)
+                nextGrid[x, y] = CheckRules(currentGrid[x, y], new Vector2Int(x, y));
+
+        // Swap the buffers for the next frame
+        var temp = currentGrid;
+        currentGrid = nextGrid;
+        nextGrid = temp;
+    }
+
+    // Renders the cell colors to the canvas.
+    void UploadFrame()
+    {
+        int i = 0;
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                byte cellID = currentGrid[x, y];
+                pixels[i] = colors[cellID].GetColor();
+                i++;
+            }
+        }
+        gridTexture.SetPixels32(pixels);
+        gridTexture.Apply();
+    }
+
+    // Handles clicking on the canvas to color cells.
     public void OnPointerClick(PointerEventData eventData)
     {
         RectTransform imageRect = displayImage.rectTransform;
@@ -102,24 +184,29 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
             Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
 
-            //update the color at that position
-            ChangeCellColor(gridX, gridY, Color.white);
+            
+            byte currentCellState = currentGrid[gridX, gridY];
+            byte newCellState = (currentCellState == 0) ? selectedColorID : (byte)0; // Toggle between colors
+
+            currentGrid[gridX, gridY] = newCellState;
+
+            // Update the single pixel on the texture for immediate visual feedback
+            gridTexture.SetPixel(gridX, gridY, colors[newCellState].GetColor());
+            gridTexture.Apply();
         }
     }
 
-    public void ChangeCellColor(int x, int y, Color newColor)
-    {
-        // Update the grid array
-        gridData[x, y] = newColor;
-
-        // Update tthe texture
-        gridTexture.SetPixel(x, y, newColor);
-
-        // Apply the change.
-        gridTexture.Apply();
-    }
-
     #region Donovan Rule Checking
+
+    // Checks the rules for the given color and returns the ID corresponding to the resulting color.
+    private byte CheckRules(byte id, Vector2Int pos)
+    {
+        byte resultByte = 0;
+        Color resultColor = colors[id].CheckRules(pos);
+        for (byte i = 0; i < colors.Length; i++)
+            if (resultColor == colors[i].GetColor()) resultByte = i;
+        return resultByte;
+    }
 
     // Compares the total number of tiles of a certain list of colors to a target amount, using a designated operation.
     public bool CheckCount(Vector2Int currentPos, Color[] targetColors, int targetCount, Neighbors targetNeighbors, Operation op)
@@ -197,10 +284,15 @@ public class Grid : MonoBehaviour, IPointerClickHandler
     }
 
     // Gets the color at a given position of the previous frame.
-    // TODO: Add color getting.
     public Color GetColorAtPos(Vector2Int pos)
     {
-        return new Color(0, 0, 0, 0);
+        if (pos.x >= gridWidth) pos.x = 0;
+        if (pos.x < 0) pos.x = gridWidth - 1;
+        if (pos.y >= gridHeight) pos.y = 0;
+        if (pos.y < 0) pos.y = gridHeight - 1;
+
+        byte id = currentGrid[pos.x,pos.y];
+        return colors[id].GetColor();
     }
 
     #endregion
