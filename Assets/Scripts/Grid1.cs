@@ -6,11 +6,11 @@ using UnityEngine.EventSystems;
 // (whenever we click on the object with script, it will call the OnPointerClick()
 public class Grid1 : MonoBehaviour, IPointerClickHandler
 {
-    
+
     public int gridWidth = 100;
     public int gridHeight = 100;
 
-    public Color[] colorPalette;
+    public Color[] colorPalette; // 0=Black(dead), 1=Green(normal), 2=Red(wall), 3=Blue(wanderer)
 
     public RawImage displayImage;
     public bool wrapEdges = true;
@@ -49,6 +49,12 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
         {
             selectedColorID = 2; // Select Red
             Debug.Log("Selected Red");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3)) // 3 key
+        {
+            selectedColorID = 3; // Select Blue
+            Debug.Log("Selected Blue");
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -105,14 +111,18 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
             {
                 byte currentState = currentGrid[x, y];
 
-                if (currentState == 2) // Rule for Red
+                // Red cells are immovable walls
+                if (currentState == 2)
                 {
                     nextGrid[x, y] = 2;
                     continue;
                 }
 
-                int aliveNeighbors = 0;   // A count of all live neighbors of any color
+                // Count neighbors by type
                 int greenNeighbors = 0;
+                int redNeighbors = 0;
+                int blueNeighbors = 0;
+                int totalAliveNeighbors = 0;
 
                 for (int dy = -1; dy <= 1; dy++)
                 {
@@ -140,31 +150,70 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
 
                         if (neighborState != 0)
                         {
-                            aliveNeighbors++;
+                            totalAliveNeighbors++;
                         }
 
                         if (neighborState == 1)
                         {
                             greenNeighbors++;
                         }
+                        else if (neighborState == 2)
+                        {
+                            redNeighbors++;
+                        }
+                        else if (neighborState == 3)
+                        {
+                            blueNeighbors++;
+                        }
                     }
                 }
 
                 byte nextState = currentState;
 
-                //APPLY RULES
-                if (currentState == 1) // Rule for live Green cells
+                // APPLY RULES
+                if (currentState == 1) // Green cells (normal Conway rules)
                 {
-                    if (greenNeighbors < 2 || greenNeighbors > 3)
+                    // Green dies if touching red wall
+                    if (redNeighbors > 0)
+                    {
+                        nextState = 0;
+                    }
+                    // Blue freezes green cells into walls
+                    else if (blueNeighbors > 0)
+                    {
+                        nextState = 2; // Becomes a wall (frozen)
+                    }
+                    // Standard Conway rules for green
+                    else if (greenNeighbors < 2 || greenNeighbors > 3)
                     {
                         nextState = 0; // Dies
                     }
                 }
-                else if (currentState == 0) // Rule for dead cells
+                else if (currentState == 3) // Blue cells (freezer rules)
                 {
-                    if (greenNeighbors == 3)
+                    // Blue follows standard Conway rules
+                    // Count only blue neighbors for Conway logic
+                    if (blueNeighbors < 2 || blueNeighbors > 3)
+                    {
+                        nextState = 0; // Dies
+                    }
+                    // Blue also dies if touching red walls
+                    if (redNeighbors > 0)
+                    {
+                        nextState = 0;
+                    }
+                }
+                else if (currentState == 0) // Dead cells (birth rules)
+                {
+                    // Green births with exactly 3 green neighbors
+                    if (greenNeighbors == 3 && redNeighbors == 0 && blueNeighbors == 0)
                     {
                         nextState = 1; // Becomes green
+                    }
+                    // Blue births with exactly 3 blue neighbors
+                    else if (blueNeighbors == 3 && redNeighbors == 0)
+                    {
+                        nextState = 3; // Becomes blue
                     }
                 }
 
@@ -226,7 +275,7 @@ public class Grid1 : MonoBehaviour, IPointerClickHandler
 
             Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
 
-            
+
             byte currentCellState = currentGrid[gridX, gridY];
             byte newCellState = (currentCellState == 0) ? selectedColorID : (byte)0; // Toggle between colors
 
