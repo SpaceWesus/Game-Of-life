@@ -5,13 +5,19 @@ public class ColorGreen : ColorScript
     public Color colorBlack;
     public Color colorWhite;
     public Color colorBlue;
+    public Color colorLime;
 
     public override Color CheckRules(Vector2Int pos)
     {
         Grid grid = transform.parent.GetComponent<Grid>();
 
+        // If at least one Lime neighbor, turn Lime.
+        Color[] colorList = new Color[1];
+        colorList[0] = colorLime;
+        if (grid.CheckCount(pos, colorList, 0, Grid.Neighbors.All, Grid.Operation.GreaterThan)) return colorLime;
+
         // If fewer than two non-black neighbors, turn black.
-        Color[] colorList = new Color[3];
+        colorList = new Color[3];
         colorList[0] = colorWhite;
         colorList[1] = colorBlue;
         colorList[2] = color;

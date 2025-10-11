@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using NUnit.Framework;
+using System.Collections.Generic;
 
 // IPointerClickHandler to receive OnPointerClick callbacks, requires eventsystems!
 // (whenever we click on the object with script, it will call the OnPointerClick()
@@ -116,7 +118,8 @@ public class Grid : MonoBehaviour, IPointerClickHandler
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                if (randomInit) currentGrid[x, y] = (byte) Random.Range(0, colors.Length);
+                //if (randomInit) currentGrid[x, y] = (byte) Random.Range(0, colors.Length);
+                if (randomInit) currentGrid[x, y] = PickRandomColor();
                 else currentGrid[x, y] = 0; // Default Color
             }
         }
@@ -126,6 +129,22 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
         // Assign the generated texture to our UI
         displayImage.texture = gridTexture;
+    }
+
+    private byte PickRandomColor()
+    {
+        List<ColorScript> colorPool = new List<ColorScript>();
+
+        for (int i = 0; i < colors.Length; i++)
+            for (int j = 0; j < colors[i].GetRandomInitWeight(); j++) 
+                colorPool.Add(colors[i]);
+
+        int selection = Random.Range(0, colorPool.Count);
+        ColorScript selectedColor = colorPool[selection];
+        for (byte i = 0; i < colors.Length; i++)
+            if (colors[i] == selectedColor) return i;
+
+        return 0;
     }
 
     // Loops through every cell in the grid and updates it based on its color's rules.
