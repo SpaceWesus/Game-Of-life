@@ -6,17 +6,18 @@ using UnityEngine.EventSystems;
 // (whenever we click on the object with script, it will call the OnPointerClick()
 public class Grid : MonoBehaviour, IPointerClickHandler
 {
+    [Header("Grid Settings")]
     public int gridWidth = 100;
     public int gridHeight = 100;
-
-    public ColorScript[] colors;
-
-    public RawImage displayImage;
     public bool wrapEdges = true;
     public bool randomInit = false;
-
     public float stepsPerSecond = 10f;
 
+    [Header("References")]
+    public RawImage displayImage;
+
+    // Grid Processing
+    private ColorScript[] colors;
     private byte[,] currentGrid;
     private byte[,] nextGrid;
 
@@ -24,9 +25,11 @@ public class Grid : MonoBehaviour, IPointerClickHandler
     private Texture2D gridTexture;
     private Color32[] pixels;
 
-    private byte selectedColorID = 1;
+    // Color Selection
+    private Image selectedColorIndicator = null;
+    public byte selectedColorID = 1;
 
-    // Simulation timing
+    // Simulation Timing
     private float accum;
     private bool isPaused = true;
 
@@ -53,39 +56,26 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
     void Start()
     {
+        if (GameObject.Find("Selected Color Indicator"))
+            selectedColorIndicator = GameObject.Find("Selected Color Indicator").GetComponent<Image>();
+
         InitializeGrid();
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) // 1 key
+        // Scroll mouse wheel to swap colors.
+        if (Input.mouseScrollDelta.y > 0.5)
         {
-            selectedColorID = 0; // Select Black
-            Debug.Log("Selected Black");
+            selectedColorID--;
+            if (selectedColorID > colors.Length) selectedColorID = (byte)(colors.Length - 1);
+            if (selectedColorIndicator != null) selectedColorIndicator.color = colors[selectedColorID].GetColor();
         }
-
-        if (Input.GetKeyDown(KeyCode.Alpha2)) // 2 key
+        else if (Input.mouseScrollDelta.y < -0.5)
         {
-            selectedColorID = 1; // Select White
-            Debug.Log("Selected White");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha3)) // 3 key
-        {
-            selectedColorID = 2; // Select Blue
-            Debug.Log("Selected Blue");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha3)) // 3 key
-        {
-            selectedColorID = 2; // Select Blue
-            Debug.Log("Selected Blue");
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha4)) // 4 key
-        {
-            selectedColorID = 3; // Select Green
-            Debug.Log("Selected Green");
+            selectedColorID++;
+            if (selectedColorID >= colors.Length) selectedColorID = 0;
+            if (selectedColorIndicator != null) selectedColorIndicator.color = colors[selectedColorID].GetColor();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -199,7 +189,7 @@ public class Grid : MonoBehaviour, IPointerClickHandler
             int gridX = Mathf.FloorToInt(normalizedX * gridWidth); //if normalizedX is .687 and width 100, we get x cord to be 68 (int)
             int gridY = Mathf.FloorToInt(normalizedY * gridHeight);
 
-            Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
+            //Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
 
             
             byte currentCellState = currentGrid[gridX, gridY];
