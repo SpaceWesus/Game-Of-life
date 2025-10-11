@@ -58,10 +58,12 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
     void Start()
     {
+        InitializeGrid();
+
         if (GameObject.Find("Selected Color Indicator"))
             selectedColorIndicator = GameObject.Find("Selected Color Indicator").GetComponent<Image>();
 
-        InitializeGrid();
+        if (selectedColorIndicator != null) selectedColorIndicator.color = colors[selectedColorID].GetColor();
     }
 
     void Update()
