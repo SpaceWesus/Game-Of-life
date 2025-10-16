@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ColorGreen : ColorScript
+public class Donovan_ColorGreen : ColorScript
 {
     /*
      * COLOR GREEN

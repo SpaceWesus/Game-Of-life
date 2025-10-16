@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ColorRed : ColorScript
+public class Donovan_ColorRed : ColorScript
 {
     public Color colorBlack;
 

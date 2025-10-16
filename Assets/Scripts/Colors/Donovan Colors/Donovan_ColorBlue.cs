@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ColorBlue : ColorScript
+public class Donovan_ColorBlue : ColorScript
 {
     public override Color CheckRules(Vector2Int pos)
     {

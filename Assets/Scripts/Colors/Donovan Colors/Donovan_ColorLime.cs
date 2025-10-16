@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ColorLime : ColorScript
+public class Donovan_ColorLime : ColorScript
 {
     public Color colorBlack;
 
