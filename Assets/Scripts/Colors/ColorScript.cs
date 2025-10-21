@@ -12,7 +12,11 @@ public class ColorScript : MonoBehaviour
         return color;
     }
 
-    public Color GetColor() { return color; }
+    public Color GetColor() 
+    {
+        //bug.Log(gameObject.name + " is reporting its color as: " + color);
+        return color; 
+    }
 
     public int GetRandomInitWeight() { return randomInitWeight; }
 }
