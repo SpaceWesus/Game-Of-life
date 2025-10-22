@@ -50,6 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   color: {r: 0, g: 1, b: 0, a: 1}
   randomInitWeight: 10
+  ruleDescText: Color Green Rules
   colorBlack: {r: 0, g: 0, b: 0, a: 1}
   colorBlue: {r: 0, g: 0, b: 1, a: 1}
   colorLime: {r: 0.5882353, g: 1, b: 0, a: 1}

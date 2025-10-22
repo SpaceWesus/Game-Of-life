@@ -75,6 +75,7 @@ public class Grid : MonoBehaviour, IPointerClickHandler
 
     void Update()
     {
+        
         // Scroll mouse wheel to swap colors.
         if (Input.mouseScrollDelta.y > 0.5)
         {
@@ -232,6 +233,19 @@ public class Grid : MonoBehaviour, IPointerClickHandler
             // Update the single pixel on the texture for immediate visual feedback
             gridTexture.SetPixel(gridX, gridY, colors[newCellState].GetColor());
             gridTexture.Apply();
+        }
+    }
+
+    public ColorScript GetSelectColorID()
+    {
+        if (colors != null)
+        {
+            //Debug.Log("selected" + colors[selectedColorID]);
+            return colors[selectedColorID];
+        }
+        else
+        {
+            return null;
         }
     }
 
