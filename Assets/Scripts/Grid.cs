@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 // IPointerClickHandler to receive OnPointerClick callbacks, requires eventsystems!
 // (whenever we click on the object with script, it will call the OnPointerClick()
-public class Grid : MonoBehaviour, IPointerClickHandler
+public class Grid : MonoBehaviour
 {
     [Header("Grid Settings")]
     public int gridWidth = 100;
@@ -16,7 +16,7 @@ public class Grid : MonoBehaviour, IPointerClickHandler
     public float stepsPerSecond = 10f;
 
     [Header("References")]
-    public RawImage displayImage;
+    public Renderer gridRenderer;
 
     // Grid Processing
     private ColorScript[] colors;
@@ -69,13 +69,13 @@ public class Grid : MonoBehaviour, IPointerClickHandler
     void Update()
     {
         // Scroll mouse wheel to swap colors.
-        if (Input.mouseScrollDelta.y > 0.5)
+        if (Input.GetKeyDown(KeyCode.E))
         {
             selectedColorID--;
             if (selectedColorID > colors.Length) selectedColorID = (byte)(colors.Length - 1);
             if (selectedColorIndicator != null) selectedColorIndicator.color = colors[selectedColorID].GetColor();
         }
-        else if (Input.mouseScrollDelta.y < -0.5)
+        else if (Input.GetKeyDown(KeyCode.Q))
         {
             selectedColorID++;
             if (selectedColorID >= colors.Length) selectedColorID = 0;
@@ -98,6 +98,9 @@ public class Grid : MonoBehaviour, IPointerClickHandler
                 accum -= stepInterval;
             }
         }
+
+        HandleMousePaint();
+
     }
 
     // Initializes the grid to all of whatever the first color in the Colors list is.
@@ -130,7 +133,7 @@ public class Grid : MonoBehaviour, IPointerClickHandler
         UploadFrame();
 
         // Assign the generated texture to our UI
-        displayImage.texture = gridTexture;
+        gridRenderer.material.mainTexture = gridTexture;
     }
 
     private byte PickRandomColor()
@@ -179,50 +182,33 @@ public class Grid : MonoBehaviour, IPointerClickHandler
         gridTexture.Apply();
     }
 
+
     // Handles clicking on the canvas to color cells.
-    public void OnPointerClick(PointerEventData eventData)
+    void HandleMousePaint()
     {
-        RectTransform imageRect = displayImage.rectTransform;
-
-        //eventdata position would give us pixel based position and it would consider the whole screen, not just canvas
-        // Convert the screen-space click position to a local position within the RawImage
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(imageRect, eventData.position, eventData.pressEventCamera, out Vector2 localPoint))
+        if (Input.GetMouseButtonDown(0))
         {
-            // The localPoint's origin is at the center of the image by default
-            // so we need to adjust it so (0,0) is at the bottom left corner
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // Ensure we clicked our GridQuad
+                if (hit.collider.GetComponent<Renderer>() == gridRenderer)
+                {
+                    Vector2 uv = hit.textureCoord; // normalized 0–1 position on texture
 
-            float pivotX = imageRect.pivot.x * imageRect.rect.width; //the pivot would be half (center of img) * width,
-                                                                     //would give us how far the center is from the edge
+                    int gridX = Mathf.FloorToInt(uv.x * gridWidth);
+                    int gridY = Mathf.FloorToInt(uv.y * gridHeight);
 
-            float pivotY = imageRect.pivot.y * imageRect.rect.height;
+                    byte newState = selectedColorID;
 
-            localPoint.x += pivotX; //converts the click coords by offset of the center.
-                                    //(if center is 50 away from edge, this does -50 + 50) so the edge now has x = 0
-
-            localPoint.y += pivotY;
-
-            // Normalize the coordinates to a 0-1 range (Math!) (so the rawimage size doesnt affect the grid ccords)
-
-            float normalizedX = Mathf.Clamp01(localPoint.x / imageRect.rect.width); //local point should now be (0,0) at bottom left / actual width // clamp01 for safety
-            float normalizedY = Mathf.Clamp01(localPoint.y / imageRect.rect.height);
-
-            // Scale the normalized coordinates to grid coordinates
-            int gridX = Mathf.FloorToInt(normalizedX * gridWidth); //if normalizedX is .687 and width 100, we get x cord to be 68 (int)
-            int gridY = Mathf.FloorToInt(normalizedY * gridHeight);
-
-            //Debug.Log($"Clicked Grid Position: ({gridX}, {gridY})");
-
-            
-            byte currentCellState = currentGrid[gridX, gridY];
-            byte newCellState = (currentCellState == 0) ? selectedColorID : (byte)0; // Toggle between colors
-
-            currentGrid[gridX, gridY] = newCellState;
-
-            // Update the single pixel on the texture for immediate visual feedback
-            gridTexture.SetPixel(gridX, gridY, colors[newCellState].GetColor());
-            gridTexture.Apply();
+                    currentGrid[gridX, gridY] = newState;
+                    gridTexture.SetPixel(gridX, gridY, colors[newState].GetColor());
+                    gridTexture.Apply();
+                }
+            }
         }
     }
+    
 
     #region Donovan Rule Checking
 
