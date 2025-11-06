@@ -50,6 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DivColorBlack
   color: {r: 0, g: 0, b: 0, a: 0}
   randomInitWeight: 1
+  ruleDescText: Divs Black
   colorWhite: {r: 1, g: 1, b: 1, a: 0}
   colorBlue: {r: 0, g: 0, b: 1, a: 0}
   colorGreen: {r: 0, g: 1, b: 0, a: 0}

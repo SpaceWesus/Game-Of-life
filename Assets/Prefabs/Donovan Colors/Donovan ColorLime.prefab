@@ -50,4 +50,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   color: {r: 0.5882353, g: 1, b: 0, a: 1}
   randomInitWeight: 0
+  ruleDescText: Donovans Lime
   colorBlack: {r: 0, g: 0, b: 0, a: 1}

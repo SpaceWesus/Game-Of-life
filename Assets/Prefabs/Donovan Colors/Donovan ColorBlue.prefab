@@ -50,3 +50,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   color: {r: 0, g: 0, b: 1, a: 1}
   randomInitWeight: 1
+  ruleDescText: Donovans Blue
