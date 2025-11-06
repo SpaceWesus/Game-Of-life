@@ -87,6 +87,20 @@ public class Grid : MonoBehaviour
             isPaused = !isPaused;
         }
 
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            if (!isPaused) { isPaused = true; }
+            InitializeGrid();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (!isPaused) { isPaused = true; }
+            randomInit = true;
+            InitializeGrid();
+            randomInit = false;
+        }
+
         if (!isPaused)
         {
             accum += Time.deltaTime;
