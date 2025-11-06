@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using NUnit.Framework;
 using System.Collections.Generic;
+using TMPro;
 
 // IPointerClickHandler to receive OnPointerClick callbacks, requires eventsystems!
 // (whenever we click on the object with script, it will call the OnPointerClick()
@@ -34,6 +35,10 @@ public class Grid : MonoBehaviour
     // Simulation Timing
     private float accum;
     private bool isPaused = true;
+
+    //UI Text
+    public TMP_Text roundText;
+    private int roundCounter = 0;
 
     #region Donovan Rule Checking Enums
 
@@ -163,6 +168,9 @@ public class Grid : MonoBehaviour
         var temp = currentGrid;
         currentGrid = nextGrid;
         nextGrid = temp;
+
+        //keep track of rounds for ui
+        roundCounter++;
     }
 
     // Renders the cell colors to the canvas.
@@ -180,6 +188,8 @@ public class Grid : MonoBehaviour
         }
         gridTexture.SetPixels32(pixels);
         gridTexture.Apply();
+
+        roundText.text = "Round: " + roundCounter;
     }
 
 
