@@ -1040,15 +1040,15 @@ MonoBehaviour:
   windowCanvasGroup: {fileID: 696043060}
   openDirection: 0
   closeDirection: 1
-  distanceToAnimate: {x: 100, y: 200}
+  distanceToAnimate: {x: 100, y: 300}
   easingCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0
-      outSlope: 0
+      inSlope: 2
+      outSlope: 2
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
