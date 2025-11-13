@@ -50,5 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DivColorPurple
   color: {r: 1, g: 0, b: 0.85490197, a: 1}
   randomInitWeight: 6
-  ruleDescText: Divs Purple
+  ruleDescText: Divs Purple  Divs PurpleDivs Purple  Divs PurpleDivs PurpleDivs Purple 
+    Divs PurpleDivs PurpleDivs PurpleDivs Purple  Divs PurpleDivs Purple  Divs PurpleDivs
+    PurpleDivs Purple  Divs PurpleDivs PurpleDivs Purple
   colorBlack: {r: 0, g: 0, b: 0, a: 0}
