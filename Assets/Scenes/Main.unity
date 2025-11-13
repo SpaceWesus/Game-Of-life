@@ -739,6 +739,8 @@ MonoBehaviour:
   zoomSpeedMultiplier: 1
   panSpeed: 1
   panMouseButton: 1
+  clampToBounds: 0
+  clampMargin: 2
 --- !u!1001 &611275454
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1281,7 +1283,7 @@ MonoBehaviour:
   gridWidth: 100
   gridHeight: 100
   wrapEdges: 1
-  randomInit: 0
+  randomInit: 1
   stepsPerSecond: 10
   gridRenderer: {fileID: 1928600942}
   selectedColorID: 1

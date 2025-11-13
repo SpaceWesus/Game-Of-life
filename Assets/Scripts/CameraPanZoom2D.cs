@@ -19,7 +19,12 @@ public class CameraPanZoom2D : MonoBehaviour
 
     private Rect worldBounds;                  // computed from grid
     private bool dragging;
-    private Vector3 lastMouseWorld;
+    private Vector3 lastMouseScreen;
+
+    [Header("Clamping")]
+    public bool clampToBounds = false;
+    public float clampMargin = 2f; // world units you can 'hang' past the edges
+
 
     void Reset()
     {
@@ -47,25 +52,45 @@ public class CameraPanZoom2D : MonoBehaviour
             Vector3 after = cam.ScreenToWorldPoint(Input.mousePosition);
             Vector3 delta = before - after; // shift so the point under cursor stays fixed
             transform.position += delta;
-            ClampCamera();
+            
+            if (clampToBounds)
+            { 
+                ClampCamera();
+            }
         }
 
         // --- Right-click drag pan ---
         if (Input.GetMouseButtonDown(panMouseButton))
         {
             dragging = true;
-            lastMouseWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+            lastMouseScreen = Input.mousePosition;
         }
         if (Input.GetMouseButtonUp(panMouseButton)) dragging = false;
 
         if (dragging)
         {
-            Vector3 curr = cam.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 move = lastMouseWorld - curr;
-            transform.position += move * panSpeed;
-            lastMouseWorld = curr;
-            ClampCamera();
+            Vector3 currScreen = Input.mousePosition;
+            Vector3 deltaScreen = currScreen - lastMouseScreen;
+
+            // Convert screen pixels → world units for this ortho camera
+            float worldPerScreenY = 2f * cam.orthographicSize / Screen.height;
+            float worldPerScreenX = worldPerScreenY * cam.aspect;
+
+            Vector3 deltaWorld = new Vector3(
+                -deltaScreen.x * worldPerScreenX,
+                -deltaScreen.y * worldPerScreenY,
+                0f
+            );
+
+            transform.position += deltaWorld;
+            lastMouseScreen = currScreen;
+
+            if (clampToBounds)
+            {
+                ClampCamera();
+            }
         }
+        
     }
 
     public void RecomputeBounds()
@@ -102,21 +127,21 @@ public class CameraPanZoom2D : MonoBehaviour
         float boundsHeight = worldBounds.height;
         Vector2 boundsCenter = worldBounds.center;
 
-        Vector3 p = transform.position;
+        Vector3 pos = transform.position;
 
         // If view is wider than bounds, pin to center on X (no oscillation)
         if (2f * halfW >= boundsWidth - 1e-4f)
-            p.x = boundsCenter.x;
+            pos.x = boundsCenter.x;
         else
-            p.x = Mathf.Clamp(p.x, worldBounds.xMin + halfW, worldBounds.xMax - halfW);
+            pos.x = Mathf.Clamp(pos.x, worldBounds.xMin + halfW, worldBounds.xMax - halfW);
 
         // If view is taller than bounds, pin to center on Y
         if (2f * halfH >= boundsHeight - 1e-4f)
-            p.y = boundsCenter.y;
+            pos.y = boundsCenter.y;
         else
-            p.y = Mathf.Clamp(p.y, worldBounds.yMin + halfH, worldBounds.yMax - halfH);
+            pos.y = Mathf.Clamp(pos.y, worldBounds.yMin + halfH, worldBounds.yMax - halfH);
 
-        transform.position = p;
+        transform.position = pos;
     }
 
 }

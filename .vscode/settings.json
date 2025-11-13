@@ -56,5 +56,8 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Game-Of-life.sln"
+    "dotnet.defaultSolution": "Game-Of-life.sln",
+    "cSpell.words": [
+        "Mathf"
+    ]
 }
