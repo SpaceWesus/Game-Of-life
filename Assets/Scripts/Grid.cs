@@ -316,6 +316,19 @@ public class Grid : MonoBehaviour
         }
     }
 
+    public ColorScript GetSelectColorID()
+    {
+        if (colors != null)
+        {
+            //Debug.Log("selected" + colors[selectedColorID]);
+            return colors[selectedColorID];
+        }
+        else
+        {
+            return null;
+        }
+    }
+
 
 
     #region Donovan Rule Checking

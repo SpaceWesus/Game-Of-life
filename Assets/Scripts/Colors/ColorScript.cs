@@ -4,6 +4,7 @@ public class ColorScript : MonoBehaviour
 {
     [SerializeField] protected Color color;
     [SerializeField] protected int randomInitWeight = 1;
+    [SerializeField] private string ruleDescText = "No Rules to show now";
 
     public virtual Color CheckRules(Vector2Int pos)
     {
@@ -15,4 +16,9 @@ public class ColorScript : MonoBehaviour
     public Color GetColor() { return color; }
 
     public int GetRandomInitWeight() { return randomInitWeight; }
+
+    public string GetRuleDescription()
+    {
+        return ruleDescText;
+    }
 }
