@@ -1175,6 +1175,7 @@ GameObject:
   - component: {fileID: 1135312858}
   - component: {fileID: 1135312860}
   - component: {fileID: 1135312859}
+  - component: {fileID: 1135312861}
   m_Layer: 0
   m_Name: BGImage
   m_TagString: Untagged
@@ -1239,6 +1240,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1135312857}
   m_CullTransparentMesh: 1
+--- !u!114 &1135312861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135312857}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d74575900bcaf493ca8ee237a4a1c969, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BGChange
+  bgsprites:
+  - {fileID: -8111889152495878255, guid: dd71b6cb11e1340948195d1018feda57, type: 3}
+  - {fileID: -2694704305662945984, guid: b35f05bc166c64798afdb5d47a5d9f59, type: 3}
+  - {fileID: 7027471683135321163, guid: 09db429e83ea744d392b2754bb3841ea, type: 3}
+  - {fileID: -2718504620718607748, guid: 8ae628eea89c04458892cb006e2a16be, type: 3}
 --- !u!1 &1872594316
 GameObject:
   m_ObjectHideFlags: 0
