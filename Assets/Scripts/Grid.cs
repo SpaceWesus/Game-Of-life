@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using NUnit.Framework;
 using System.Collections.Generic;
+using TMPro;
 
 // IPointerClickHandler to receive OnPointerClick callbacks, requires eventsystems!
 // (whenever we click on the object with script, it will call the OnPointerClick()
@@ -14,6 +15,12 @@ public class Grid : MonoBehaviour
     public bool wrapEdges = true;
     public bool randomInit = false;
     public float stepsPerSecond = 10f;
+
+    // Painting state
+    private bool isPainting = false;
+    private Vector2Int lastPaintCell;
+    private bool hasLastPaintCell = false;
+
 
     [Header("References")]
     public Renderer gridRenderer;
@@ -34,6 +41,10 @@ public class Grid : MonoBehaviour
     // Simulation Timing
     private float accum;
     private bool isPaused = true;
+
+    //UI Text
+    public TMP_Text roundText;
+    private int roundCounter = 0;
 
     #region Donovan Rule Checking Enums
 
@@ -177,6 +188,9 @@ public class Grid : MonoBehaviour
         var temp = currentGrid;
         currentGrid = nextGrid;
         nextGrid = temp;
+
+        //keep track of rounds for ui
+        roundCounter++;
     }
 
     // Renders the cell colors to the canvas.
@@ -194,35 +208,142 @@ public class Grid : MonoBehaviour
         }
         gridTexture.SetPixels32(pixels);
         gridTexture.Apply();
+
+        roundText.text = "Round: " + roundCounter;
     }
 
 
     // Handles clicking on the canvas to color cells.
-    void HandleMousePaint()
+        void HandleMousePaint()
     {
+        // LMB pressed: start painting
         if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            Vector2Int cell;
+            if (TryGetGridCellUnderMouse(out cell))
             {
-                // Ensure we clicked our GridQuad
-                if (hit.collider.GetComponent<Renderer>() == gridRenderer)
+                isPainting = true;
+                hasLastPaintCell = true;
+                lastPaintCell = cell;
+
+                PaintCell(cell);
+            }
+        }
+        // LMB held: continue painting (drag)
+        else if (Input.GetMouseButton(0) && isPainting)
+        {
+            Vector2Int cell;
+            if (TryGetGridCellUnderMouse(out cell))
+            {
+                if (hasLastPaintCell)
                 {
-                    Vector2 uv = hit.textureCoord; // normalized 0–1 position on texture
-
-                    int gridX = Mathf.FloorToInt(uv.x * gridWidth);
-                    int gridY = Mathf.FloorToInt(uv.y * gridHeight);
-
-                    byte newState = selectedColorID;
-
-                    currentGrid[gridX, gridY] = newState;
-                    gridTexture.SetPixel(gridX, gridY, colors[newState].GetColor());
-                    gridTexture.Apply();
+                    // Draw a line from last cell to current cell to avoid gaps
+                    PaintLine(lastPaintCell, cell);
                 }
+                else
+                {
+                    PaintCell(cell);
+                }
+
+                lastPaintCell = cell;
+                hasLastPaintCell = true;
+            }
+        }
+        // LMB released: stop painting
+        else if (Input.GetMouseButtonUp(0))
+        {
+            isPainting = false;
+            hasLastPaintCell = false;
+        }
+    }
+
+        // Raycast from mouse to the grid quad and convert to grid coordinates.
+    private bool TryGetGridCellUnderMouse(out Vector2Int cell)
+    {
+        cell = default;
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (!Physics.Raycast(ray, out RaycastHit hit))
+            return false;
+
+        // Make sure we clicked our gridRenderer
+        if (hit.collider == null || hit.collider.GetComponent<Renderer>() != gridRenderer)
+            return false;
+
+        Vector2 uv = hit.textureCoord; // normalized 0–1
+        int x = Mathf.FloorToInt(uv.x * gridWidth);
+        int y = Mathf.FloorToInt(uv.y * gridHeight);
+
+        // Clamp just in case
+        x = Mathf.Clamp(x, 0, gridWidth  - 1);
+        y = Mathf.Clamp(y, 0, gridHeight - 1);
+
+        cell = new Vector2Int(x, y);
+        return true;
+    }
+
+    // Paint a single cell at given grid coordinates.
+    private void PaintCell(Vector2Int cell)
+    {
+        int x = cell.x;
+        int y = cell.y;
+
+        byte newState = selectedColorID;
+
+        currentGrid[x, y] = newState;
+        gridTexture.SetPixel(x, y, colors[newState].GetColor());
+        gridTexture.Apply(false);
+    }
+
+    // Paint a continuous line between two cells (simple Bresenham) to avoid gaps when dragging fast.
+    private void PaintLine(Vector2Int from, Vector2Int to)
+    {
+        int x0 = from.x;
+        int y0 = from.y;
+        int x1 = to.x;
+        int y1 = to.y;
+
+        int dx = Mathf.Abs(x1 - x0);
+        int dy = Mathf.Abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+
+        while (true)
+        {
+            PaintCell(new Vector2Int(x0, y0));
+
+            if (x0 == x1 && y0 == y1)
+                break;
+
+            int e2 = 2 * err;
+            if (e2 > -dy)
+            {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx)
+            {
+                err += dx;
+                y0 += sy;
             }
         }
     }
-    
+
+    public ColorScript GetSelectColorID()
+    {
+        if (colors != null)
+        {
+            //Debug.Log("selected" + colors[selectedColorID]);
+            return colors[selectedColorID];
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+
 
     #region Donovan Rule Checking
 
