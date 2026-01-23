@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+
 
 public class CameraPanZoom2D : MonoBehaviour
 {
@@ -9,7 +11,7 @@ public class CameraPanZoom2D : MonoBehaviour
 
     [Header("Zoom")]
     public float minSize = 1.5f;
-    public float maxSize = 60f;
+    public float maxSize = 10f;
     public float zoomFactorPerNotch = 0.9f;    // <1 = zoom in per notch; >1 = zoom out
     public float zoomSpeedMultiplier = 1.0f;   // mouse wheel sensitivity
 
@@ -21,9 +23,16 @@ public class CameraPanZoom2D : MonoBehaviour
     private bool dragging;
     private Vector3 lastMouseScreen;
 
+    private Vector3 homePos;
+    private float homeOrthoSize;
+    private Quaternion homeRot;
+
+
     [Header("Clamping")]
-    public bool clampToBounds = false;
-    public float clampMargin = 2f; // world units you can 'hang' past the edges
+    public bool clampToBounds = true;
+    public float clampMargin = 10; // world units you can 'hang' past the edges
+
+    bool pointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
 
     void Reset()
@@ -36,6 +45,9 @@ public class CameraPanZoom2D : MonoBehaviour
     {
         RecomputeBounds();
         ClampCamera();
+        homePos = transform.position;
+        homeRot = transform.rotation;
+        homeOrthoSize = cam.orthographicSize;
     }
 
     void Update()
@@ -44,20 +56,19 @@ public class CameraPanZoom2D : MonoBehaviour
 
         // --- Zoom toward cursor ---
         float scroll = Input.mouseScrollDelta.y;
-        if (Mathf.Abs(scroll) > 0.0001f)
+        
+        // Block zoom if cursor is over ANY UI (prevents ScrollView conflict)
+        if (!pointerOverUI && Mathf.Abs(scroll) > 0.0001f)
         {
             Vector3 before = cam.ScreenToWorldPoint(Input.mousePosition);
             float factor = Mathf.Pow(zoomFactorPerNotch, scroll * zoomSpeedMultiplier);
             cam.orthographicSize = Mathf.Clamp(cam.orthographicSize * factor, minSize, maxSize);
             Vector3 after = cam.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 delta = before - after; // shift so the point under cursor stays fixed
+            Vector3 delta = before - after;
             transform.position += delta;
-            
-            if (clampToBounds)
-            { 
-                ClampCamera();
-            }
-        }
+
+            if (clampToBounds) ClampCamera();
+        }  
 
         // --- Right-click drag pan ---
         if (Input.GetMouseButtonDown(panMouseButton))
@@ -90,6 +101,10 @@ public class CameraPanZoom2D : MonoBehaviour
                 ClampCamera();
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.V))
+            ResetView();
+
         
     }
 
@@ -127,21 +142,42 @@ public class CameraPanZoom2D : MonoBehaviour
         float boundsHeight = worldBounds.height;
         Vector2 boundsCenter = worldBounds.center;
 
+        // Expand bounds by clampMargin on all sides
+        float xMin = worldBounds.xMin - clampMargin;
+        float xMax = worldBounds.xMax + clampMargin;
+        float yMin = worldBounds.yMin - clampMargin;
+        float yMax = worldBounds.yMax + clampMargin;
+
+        float expandedWidth  = (xMax - xMin);
+        float expandedHeight = (yMax - yMin);
+        Vector2 expandedCenter = new Vector2((xMin + xMax) * 0.5f, (yMin + yMax) * 0.5f);
+
         Vector3 pos = transform.position;
 
-        // If view is wider than bounds, pin to center on X (no oscillation)
-        if (2f * halfW >= boundsWidth - 1e-4f)
-            pos.x = boundsCenter.x;
+        // If view is wider than expanded bounds, pin to center on X
+        if (2f * halfW >= expandedWidth - 1e-4f)
+            pos.x = expandedCenter.x;
         else
-            pos.x = Mathf.Clamp(pos.x, worldBounds.xMin + halfW, worldBounds.xMax - halfW);
+            pos.x = Mathf.Clamp(pos.x, xMin + halfW, xMax - halfW);
 
-        // If view is taller than bounds, pin to center on Y
-        if (2f * halfH >= boundsHeight - 1e-4f)
-            pos.y = boundsCenter.y;
+        // If view is taller than expanded bounds, pin to center on Y
+        if (2f * halfH >= expandedHeight - 1e-4f)
+            pos.y = expandedCenter.y;
         else
-            pos.y = Mathf.Clamp(pos.y, worldBounds.yMin + halfH, worldBounds.yMax - halfH);
+            pos.y = Mathf.Clamp(pos.y, yMin + halfH, yMax - halfH);
 
         transform.position = pos;
     }
+
+
+    public void ResetView()
+    {
+        transform.position = homePos;
+        transform.rotation = homeRot;
+        cam.orthographicSize = homeOrthoSize;
+
+        if (clampToBounds) ClampCamera();
+    }
+
 
 }

@@ -15,6 +15,7 @@ public class Grid : MonoBehaviour
     public bool wrapEdges = true;
     public bool randomInit = false;
     public float stepsPerSecond = 10f;
+    
 
     // Painting state
     private bool isPainting = false;
@@ -120,6 +121,14 @@ public class Grid : MonoBehaviour
             randomInit = false;
         }
 
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            isPaused = true;
+            Step();
+            UploadFrame();
+        }
+
+
         if (!isPaused)
         {
             accum += Time.deltaTime;
@@ -194,8 +203,13 @@ public class Grid : MonoBehaviour
             for (int j = 0; j < colors[i].GetRandomInitWeight(); j++) 
                 colorPool.Add(colors[i]);
 
+        // 🔒 SAFETY GUARD: no colors enabled
+        if (colorPool.Count == 0)
+            return 0; // fallback to default color (usually black / dead)
+
         int selection = Random.Range(0, colorPool.Count);
         ColorScript selectedColor = colorPool[selection];
+        
         for (byte i = 0; i < colors.Length; i++)
             if (colors[i] == selectedColor) return i;
 
@@ -241,6 +255,9 @@ public class Grid : MonoBehaviour
     // Handles clicking on the canvas to color cells.
         void HandleMousePaint()
     {
+        bool erase = Input.GetKey(KeyCode.LeftShift);
+        byte paintColor = erase ? (byte)0 : selectedColorID;
+
         // LMB pressed: start painting
         if (Input.GetMouseButtonDown(0))
         {
@@ -251,7 +268,7 @@ public class Grid : MonoBehaviour
                 hasLastPaintCell = true;
                 lastPaintCell = cell;
 
-                PaintCell(cell);
+                PaintCell(cell, paintColor);
             }
         }
         // LMB held: continue painting (drag)
@@ -263,11 +280,11 @@ public class Grid : MonoBehaviour
                 if (hasLastPaintCell)
                 {
                     // Draw a line from last cell to current cell to avoid gaps
-                    PaintLine(lastPaintCell, cell);
+                    PaintLine(lastPaintCell, cell, paintColor);
                 }
                 else
                 {
-                    PaintCell(cell);
+                    PaintCell(cell, paintColor);
                 }
 
                 lastPaintCell = cell;
@@ -308,20 +325,19 @@ public class Grid : MonoBehaviour
     }
 
     // Paint a single cell at given grid coordinates.
-    private void PaintCell(Vector2Int cell)
+    private void PaintCell(Vector2Int cell, byte paintColor)
     {
         int x = cell.x;
         int y = cell.y;
 
-        byte newState = selectedColorID;
-
-        currentGrid[x, y] = newState;
-        gridTexture.SetPixel(x, y, colors[newState].GetColor());
+        currentGrid[x, y] = paintColor;
+        gridTexture.SetPixel(x, y, colors[paintColor].GetColor());
         gridTexture.Apply(false);
     }
 
+
     // Paint a continuous line between two cells (simple Bresenham) to avoid gaps when dragging fast.
-    private void PaintLine(Vector2Int from, Vector2Int to)
+    private void PaintLine(Vector2Int from, Vector2Int to, byte paintColor)
     {
         int x0 = from.x;
         int y0 = from.y;
@@ -336,7 +352,7 @@ public class Grid : MonoBehaviour
 
         while (true)
         {
-            PaintCell(new Vector2Int(x0, y0));
+            PaintCell(new Vector2Int(x0, y0), paintColor);
 
             if (x0 == x1 && y0 == y1)
                 break;
@@ -367,6 +383,10 @@ public class Grid : MonoBehaviour
             return null;
         }
     }
+
+    public bool IsInitialized => colors != null && colors.Length > 0;
+    public ColorScript[] GetColorScripts() => colors;
+
 
     public void SetPauseMenuOpen(bool open)
     {
@@ -481,6 +501,9 @@ public class Grid : MonoBehaviour
         byte id = currentGrid[pos.x,pos.y];
         return colors[id].GetColor();
     }
+
+        // Randomize Options
+
 
     #endregion
 }

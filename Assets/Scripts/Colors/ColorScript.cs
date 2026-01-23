@@ -21,4 +21,17 @@ public class ColorScript : MonoBehaviour
     {
         return ruleDescText;
     }
+
+    public void SetRandomInitWeight(int w)
+    {
+        randomInitWeight = Mathf.Max(0, w);
+    }
+
+    public void SetEnabledForRandom(bool enabled)
+    {
+        if (!enabled) randomInitWeight = 0;
+        else if (randomInitWeight == 0) randomInitWeight = 1;
+    }
+
+
 }

@@ -15,7 +15,7 @@ MonoBehaviour:
   active: 1
   distance:
     m_OverrideState: 1
-    m_Value: 0.067
+    m_Value: 0.173
   cropToFit:
     m_OverrideState: 0
     m_Value: 1
@@ -58,7 +58,7 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0.45
   scatter:
     m_OverrideState: 0
     m_Value: 0.7
@@ -99,13 +99,13 @@ MonoBehaviour:
   active: 1
   color:
     m_OverrideState: 1
-    m_Value: {r: 0.1792453, g: 0.1792453, b: 0.1792453, a: 1}
+    m_Value: {r: 0.5283019, g: 0.47597012, b: 0.47597012, a: 1}
   center:
     m_OverrideState: 0
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 0.25
   smoothness:
     m_OverrideState: 1
     m_Value: 0.773
@@ -124,7 +124,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81180773991d8724ab7f2d216912b564, type: 3}
   m_Name: ChromaticAberration
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   intensity:
     m_OverrideState: 1
     m_Value: 0.269
