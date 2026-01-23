@@ -797,7 +797,7 @@ GameObject:
   - component: {fileID: 395331576}
   - component: {fileID: 395331575}
   - component: {fileID: 395331574}
-  - component: {fileID: 395331578}
+  - component: {fileID: 395331580}
   m_Layer: 0
   m_Name: Background Quad
   m_TagString: Untagged
@@ -893,12 +893,12 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 1}
-  m_LocalScale: {x: 100, y: 100, z: 100}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 36, y: 30, z: 20}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &395331578
+--- !u!114 &395331580
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -907,15 +907,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 395331573}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: daa3d26c94402e7489dbe0a5d1d4d45b, type: 3}
+  m_Script: {fileID: 11500000, guid: aaa4643149630204f967594fd4daa2ba, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BackgroundColorOscillatorWorld
-  rend: {fileID: 0}
-  colors:
-  - {r: 1, g: 0, b: 0, a: 1}
-  - {r: 0, g: 1, b: 0.16782904, a: 1}
-  - {r: 0, g: 0.97520137, b: 1, a: 1}
-  cycleDuration: 6
+  m_EditorClassIdentifier: Assembly-CSharp::BackgroundManager
+  rend: {fileID: 395331575}
+  backgrounds:
+  - {fileID: 2100000, guid: 066bf11b2af2169439e411fa48489046, type: 2}
+  - {fileID: 2100000, guid: a975bc5185d2df3449983aaf5192dd06, type: 2}
+  - {fileID: 2100000, guid: c15a355176936b64fb554c16c11c2a6a, type: 2}
+  - {fileID: 2100000, guid: 5f997a20310ee3c46989580a62f5f1a3, type: 2}
+  oscillatorMaterial: {fileID: 2100000, guid: 5f997a20310ee3c46989580a62f5f1a3, type: 2}
+  oscColors: []
+  cycleDuration: 3
 --- !u!1 &458790457
 GameObject:
   m_ObjectHideFlags: 0
@@ -999,7 +1002,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 294602637}
   m_Direction: 2
   m_Value: 1
-  m_Size: 1
+  m_Size: 0.5
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1397,8 +1400,10 @@ MonoBehaviour:
   cam: {fileID: 519420031}
   gridRenderer: {fileID: 1928600942}
   gridRectTransform: {fileID: 0}
+  blockZoomRect: {fileID: 95512763}
+  uiCanvas: {fileID: 135223591}
   minSize: 1.5
-  maxSize: 60
+  maxSize: 10
   zoomFactorPerNotch: 0.9
   zoomSpeedMultiplier: 1
   panSpeed: 1
@@ -1440,7 +1445,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 211.50044, y: 324.7406}
+  m_AnchoredPosition: {x: 211.50044, y: 288.17737}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &533444127
@@ -1791,24 +1796,26 @@ MonoBehaviour:
 
     Left Click - Paint
 
-    Right Click - Drag Camera
+    Shift + Left Click - Erase
 
-    Space
-    - Play/Pause
+    Right
+    Click - Drag Camera
+
+    Space - Play/Pause
 
     F - Advance one step
 
-    R - Randomize
+    R
+    - Randomize
 
-    O - Randomize
-    Options
+    O - Randomize Options
 
     C - Toggle color descriptions
 
-    X - Clear board
+    X
+    - Clear board
 
-    V - Camera
-    view reset
+    V - Camera view reset
 
     Esc - Pause menu'
   m_isRightToLeft: 0
@@ -1837,8 +1844,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 50
-  m_fontSizeBase: 50
+  m_fontSize: 45
+  m_fontSizeBase: 45
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3916,7 +3923,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2156890793962925679, guid: aa24e59d7f750124984091392c3292e4, type: 3}
       propertyPath: ruleDescText
-      value: '"Zombie" color that keeps green in Ckeck.'
+      value: '"Zombie" color that keeps green in Check.'
       objectReference: {fileID: 0}
     - target: {fileID: 6023314760864300930, guid: aa24e59d7f750124984091392c3292e4, type: 3}
       propertyPath: m_Name

@@ -9,6 +9,10 @@ public class CameraPanZoom2D : MonoBehaviour
     public Renderer gridRenderer;              // If using Quad/Plane (recommended)
     public RectTransform gridRectTransform;    // If using World-Space Canvas (optional)
 
+    [Header("UI Blocking")]
+    [SerializeField] private RectTransform blockZoomRect; // assign ScrollView -> Viewport
+    [SerializeField] private Canvas uiCanvas;
+
     [Header("Zoom")]
     public float minSize = 1.5f;
     public float maxSize = 10f;
@@ -54,21 +58,23 @@ public class CameraPanZoom2D : MonoBehaviour
     {
         if (!cam) return;
 
+        // HARD BLOCK: if mouse over UI, skip camera input entirely
+        if (IsMouseOverBlockedUI())
+            return;
+
         // --- Zoom toward cursor ---
         float scroll = Input.mouseScrollDelta.y;
-        
-        // Block zoom if cursor is over ANY UI (prevents ScrollView conflict)
-        if (!pointerOverUI && Mathf.Abs(scroll) > 0.0001f)
+        if (Mathf.Abs(scroll) > 0.0001f)
         {
             Vector3 before = cam.ScreenToWorldPoint(Input.mousePosition);
             float factor = Mathf.Pow(zoomFactorPerNotch, scroll * zoomSpeedMultiplier);
             cam.orthographicSize = Mathf.Clamp(cam.orthographicSize * factor, minSize, maxSize);
             Vector3 after = cam.ScreenToWorldPoint(Input.mousePosition);
-            Vector3 delta = before - after;
-            transform.position += delta;
+            transform.position += before - after;
 
-            if (clampToBounds) ClampCamera();
-        }  
+            if (clampToBounds)
+                ClampCamera();
+        }
 
         // --- Right-click drag pan ---
         if (Input.GetMouseButtonDown(panMouseButton))
@@ -168,6 +174,22 @@ public class CameraPanZoom2D : MonoBehaviour
 
         transform.position = pos;
     }
+
+    private bool IsMouseOverBlockedUI()
+    {
+        if (blockZoomRect == null) return false;
+
+        Camera uiCam = null;
+        if (uiCanvas != null && uiCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            uiCam = uiCanvas.worldCamera;
+
+        return RectTransformUtility.RectangleContainsScreenPoint(
+            blockZoomRect,
+            Input.mousePosition,
+            uiCam
+        );
+    }
+
 
 
     public void ResetView()
