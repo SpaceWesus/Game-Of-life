@@ -22,4 +22,6 @@ public class UIDetectHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         ui_tween.CloseWindow();
     }
+
+    
 }

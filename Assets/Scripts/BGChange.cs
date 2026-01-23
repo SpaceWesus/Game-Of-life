@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class BGChange : MonoBehaviour
 {
-    public Sprite[] bgsprites;
+    public Sprite[] bgSprites;
     private int currentIndex = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -17,10 +17,10 @@ public class BGChange : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.B))
         {
-            if(bgsprites.Length > 0)
+            if(bgSprites.Length > 0)
             {
-                currentIndex = (currentIndex + 1) % bgsprites.Length;
-                gameObject.GetComponent<Image>().sprite = bgsprites[currentIndex];
+                currentIndex = (currentIndex + 1) % bgSprites.Length;
+                gameObject.GetComponent<Image>().sprite = bgSprites[currentIndex];
             }
         }
     }

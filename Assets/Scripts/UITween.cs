@@ -44,6 +44,9 @@ public class UITween : MonoBehaviour
 
     private void Start()
     {
+        OpenWindow();
+
+        /*
         _initialPosition = window.transform.position;
 
         InitializeOffsetPositions();
@@ -51,7 +54,7 @@ public class UITween : MonoBehaviour
         windowCanvasGroup.alpha = 0;
         windowCanvasGroup.interactable = false;
         windowCanvasGroup.blocksRaycasts = false;
-        _isOpen = false;
+        _isOpen = false;*/
     }
 
     private void InitializeOffsetPositions()
@@ -69,6 +72,8 @@ public class UITween : MonoBehaviour
 
     public void OpenWindow()
     {
+        //Debug.Log($"[UITween] OpenWindow called on {name}\nCaller stack:\n{Environment.StackTrace}");
+
         if (_isOpen)
             return;
 
@@ -149,6 +154,13 @@ public class UITween : MonoBehaviour
         windowCanvasGroup.blocksRaycasts = open;
 
     }
+
+    public void ToggleWindow()
+    {
+        if (_isOpen) CloseWindow();
+        else OpenWindow();
+    }
+
 
     #endregion
 }

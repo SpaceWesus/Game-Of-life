@@ -45,6 +45,8 @@ public class Grid : MonoBehaviour
     //UI Text
     public TMP_Text roundText;
     private int roundCounter = 0;
+    private bool pauseMenuOpen = false;
+    [SerializeField] private UITween rulesTween;
 
     #region Donovan Rule Checking Enums
 
@@ -79,7 +81,13 @@ public class Grid : MonoBehaviour
 
     void Update()
     {
-        // Scroll mouse wheel to swap colors.
+        // basic "pause the game" functionality that halts entire update 
+        if (pauseMenuOpen)
+        {
+            return;
+        }
+
+        // Q and E to swap colors.
         if (Input.GetKeyDown(KeyCode.E))
         {
             selectedColorID--;
@@ -100,8 +108,8 @@ public class Grid : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.X))
         {
-            if (!isPaused) { isPaused = true; }
-            InitializeGrid();
+            isPaused = true;
+            ClearBoard();
         }
 
         if (Input.GetKeyDown(KeyCode.R))
@@ -122,6 +130,12 @@ public class Grid : MonoBehaviour
                 UploadFrame();
                 accum -= stepInterval;
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            // Assign this in inspector if possible, otherwise Find it by name once.
+            rulesTween.ToggleWindow();
         }
 
         HandleMousePaint();
@@ -160,6 +174,17 @@ public class Grid : MonoBehaviour
         // Assign the generated texture to our UI
         gridRenderer.material.mainTexture = gridTexture;
     }
+
+    private void ClearBoard()
+    {
+        for (int y = 0; y < gridHeight; y++)
+            for (int x = 0; x < gridWidth; x++)
+                currentGrid[x, y] = 0;
+
+        roundCounter = 0;
+        UploadFrame();
+    }
+
 
     private byte PickRandomColor()
     {
@@ -341,6 +366,19 @@ public class Grid : MonoBehaviour
         {
             return null;
         }
+    }
+
+    public void SetPauseMenuOpen(bool open)
+    {
+        Debug.Log("SetPausemenu open called in grid");
+        pauseMenuOpen = open;
+
+        // Always pause sim when menu opens
+        if (open) isPaused = true;
+
+        // Stop paint drag state immediately so it doesn't keep painting when resuming
+        isPainting = false;
+        hasLastPaintCell = false;
     }
 
 
